@@ -82,11 +82,61 @@ app.post('/payBill', (req, res) => {
         }
     
         res.json(response);
-    } else {
+    } else if (vaNumber && vaNumber.status == '1') {
         var response = {
             "PayBillRs":
             {
                 "STATUS": "88"
+            }
+        }
+
+        res.json(response)
+
+    } else {
+        var response = {
+            "PayBillRs":
+            {
+                "STATUS": "14"
+            }
+        }
+
+        res.json(response)
+    }
+})
+
+app.post('/revBill', (req, res) => {
+    var valist = JSON.parse(fs.readFileSync('./valist.json'))
+    // find va number from valist json file and return the va number
+    let vaNumber = valist.find(va => va.va_number === req.body.RevBillRq.VI_VANUMBER)
+    // check if vaNumber found
+    if (vaNumber && vaNumber.status == '0') {
+        // update json file status to 1
+        vaNumber.status = '1'
+        fs.writeFileSync('./valist.json', JSON.stringify(valist))
+
+        var response = {
+            "RevBillRs":
+            {
+                "STATUS": "00"
+            }
+        }
+    
+        res.json(response);
+    } else if (vaNumber && vaNumber.status == '1') {
+        var response = {
+            "RevBillRs":
+            {
+                "STATUS": "88"
+            }
+        }
+
+        res.json(response)
+        
+    } else {
+        var response = {
+            "RevBillRs":
+            {
+                "STATUS": "14"
             }
         }
 
