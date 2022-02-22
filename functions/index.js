@@ -105,6 +105,8 @@ app.get('/refreshstatus', (req, res) => {
     res.send('status refreshed')
 })
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+// app.listen(port, () => {
+//   console.log(`Example app listening on port ${port}`)
+// })
+
+app.listen(process.env.PORT || 5000)
