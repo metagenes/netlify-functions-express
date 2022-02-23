@@ -22,7 +22,7 @@ app.post('/getBill', (req, res) => {
         var response = {
             "GetBillRs":
             {
-                "CUSTNAME": "PT. Karya Kerja Sejahtera",
+                "CUSTNAME": "KKS MAHMUD",
                 "BILL_AMOUNT": "10000.00",
                 "VI_CCY": "360",
                 "RefInfo": [
