@@ -167,6 +167,11 @@ app.get('/refreshstatus', (req, res) => {
     res.send('status refreshed')
 })
 
+app.get('/getresponsefile', (req, res) => {
+    var valist = JSON.parse(fs.readFileSync('./valist.json'))
+       
+    res.send(valist)
+})
 // app.listen(port, () => {
 //   console.log(`Example app listening on port ${port}`)
 // })
