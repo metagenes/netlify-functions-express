@@ -17,6 +17,18 @@ app.post('/getBill', (req, res) => {
     var valist = JSON.parse(fs.readFileSync('./valist.json'))
     // find va number from valist json file and return the va number
     let vaNumber = valist.find(va => va.va_number === req.body.GetBillRq.VI_VANUMBER)
+
+    if (vaNumber.status == '1') {
+        var response = {
+            "GetBillRs":
+            {
+                "STATUS": "88"
+            }
+        }
+
+        res.json(response)
+    }
+
     // check if vaNumber found
     if (vaNumber) {
         var response = {
