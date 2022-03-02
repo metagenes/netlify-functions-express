@@ -82,7 +82,7 @@ app.post('/payBill', (req, res, next) => {
     req.vaNumber = req.valist.find(va => va.va_number === req.body.PayBillRq.VI_VANUMBER)
     setTimeout(() => {
         next()
-    }, req.vaNumber.scenario == '0' ? 12000 : 0);
+    }, req.vaNumber.scenario == '0' ? 40000 : 0);
 }, (req, res) => {
     const {valist, vaNumber} = req
 
