@@ -80,6 +80,32 @@ app.post('/payBill', (req, res) => {
     var valist = JSON.parse(fs.readFileSync('./valist.json'))
     // find va number from valist json file and return the va number
     let vaNumber = valist.find(va => va.va_number === req.body.PayBillRq.VI_VANUMBER)
+
+    if (vaNumber && vaNumber.scenario == '0') {
+        vaNumber.scenario = '1'
+        fs.writeFileSync('./valist.json', JSON.stringify(valist))
+
+        var response = {
+            "PayBillRs":
+            {
+                "STATUS": "00"
+            }
+        }
+         
+        return setTimeout (() => res.json(response), 12000)
+
+    }
+
+    if  (vaNumber && vaNumber.scenario == '1' && vaNumber.status == '0') {
+        var response = {
+            "PayBillRs":
+            {
+                "STATUS": "00"
+            }
+        }
+
+        res.send(response)
+    }
     // check if vaNumber found
     if (vaNumber && vaNumber.status == '0') {
         // update json file status to 1
@@ -161,6 +187,7 @@ app.get('/refreshstatus', (req, res) => {
     // update all status from 1 to 0
     valist.forEach(va => {
         va.status = '0'
+        va.scenario = '0'
     }
     )
     fs.writeFileSync('./valist.json', JSON.stringify(valist))
