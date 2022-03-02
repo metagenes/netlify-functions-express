@@ -76,10 +76,15 @@ app.post('/getBill', (req, res) => {
     }
 })
 
-app.post('/payBill', (req, res) => {
-    var valist = JSON.parse(fs.readFileSync('./valist.json'))
+app.post('/payBill', (req, res, next) => {
+    req.valist = JSON.parse(fs.readFileSync('./valist.json'))
     // find va number from valist json file and return the va number
-    let vaNumber = valist.find(va => va.va_number === req.body.PayBillRq.VI_VANUMBER)
+    req.vaNumber = req.valist.find(va => va.va_number === req.body.PayBillRq.VI_VANUMBER)
+    setTimeout(() => {
+        next()
+    }, req.vaNumber.scenario == '0' ? 12000 : 0);
+}, (req, res) => {
+    const {valist, vaNumber} = req
 
     if (vaNumber && vaNumber.scenario == '0') {
         vaNumber.scenario = '1'
@@ -91,9 +96,8 @@ app.post('/payBill', (req, res) => {
                 "STATUS": "00"
             }
         }
-         
-        return setTimeout (() => res.json(response), 12000)
 
+        return res.json(response)
     }
 
     if  (vaNumber && vaNumber.scenario == '1' && vaNumber.status == '0') {
