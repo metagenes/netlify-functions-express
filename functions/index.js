@@ -13,185 +13,132 @@ app.get('/', (req, res) => {
   res.send('Hello World!')
 })
 
-app.post('/getBill', (req, res) => {
+app.post('/inquiry', (req, res) => {
     var valist = JSON.parse(fs.readFileSync('./valist.json'))
+
     // find va number from valist json file and return the va number
-    let vaNumber = valist.find(va => va.va_number === req.body.GetBillRq.VI_VANUMBER)
+    let vaNumber = valist.find(va => va.va_number === req.body.vaNo)
+
+    // check if vaNumber found
+    if (vaNumber && vaNumber.status == '0') {
+        var response = {
+            "inquiryVAResponse": {
+                "responseCode": "00",
+                "responseMessage": "Approve or completed successfully",
+                "detailResponse": {
+                "vaName": vaNumber.name,
+                "billingAmount": vaNumber.amount,
+                "currency": "IDR",
+                "reference": vaNumber.reference
+                }
+                }
+        }
+    
+        res.json(response,200);
+    } else if (!vaNumber) {
+        var response = {
+            "inquiryVAResponse": {
+                "responseCode": "14",
+                "responseMessage": "Record Specified was not found in the database"
+            }
+        }
+        res.json(response,422);
+    }
+
 
     if (vaNumber.status == '1') {
         var response = {
-            "GetBillRs":
-            {
-                "STATUS": "88"
+            "inquiryVAResponse": {
+                "responseCode": "88",
+                "responseMessage": "Bill already paid"
             }
         }
 
-        res.json(response)
-    }
-
-    // check if vaNumber found
-    if (vaNumber) {
-        var response = {
-            "GetBillRs":
-            {
-                "CUSTNAME": "KKS MAHMUD",
-                "BILL_AMOUNT": "10000.00",
-                "VI_CCY": "360",
-                "RefInfo": [
-                    {
-                        "RefName": "BillPeriod",
-                        "RefValue": "02"
-                    },
-                    {
-                        "RefName": "BillLateCharges",
-                        "RefValue": "0",
-                    }
-                ],
-                "STATUS": "00"
-            }
-        }
-    
-        res.json(response);
-    } else {
-        var response = {
-            "GetBillRs":
-                {
-                    "CUSTNAME": "",
-                    "BILL_AMOUNT": "0",
-                    "VI_CCY": "360",
-                    "RefInfo": [
-                        {
-                            "RefName": "BillPeriod",
-                            "RefValue": ""
-                        },
-                        {
-                            "RefName": "BillLateCharges",
-                            "RefValue": "",
-                        }
-                    ],
-                    "STATUS": "14"
-                }
-        }
-        res.json(response)
+        res.json(response,422)
     }
 })
 
-app.post('/payBill', (req, res, next) => {
-    req.valist = JSON.parse(fs.readFileSync('./valist.json'))
-    // find va number from valist json file and return the va number
-    req.vaNumber = req.valist.find(va => va.va_number === req.body.PayBillRq.VI_VANUMBER)
-    setTimeout(() => {
-        next()
-    }, req.vaNumber.scenario == '0' ? 40000 : 0);
-}, (req, res) => {
-    const {valist, vaNumber} = req
-
-    if (vaNumber && vaNumber.scenario == '0') {
-        vaNumber.scenario = '1'
-        fs.writeFileSync('./valist.json', JSON.stringify(valist))
-
-        var response = {
-            "PayBillRs":
-            {
-                "STATUS": "00"
-            }
-        }
-
-        return res.json(response)
-    }
-
-    if  (vaNumber && vaNumber.scenario == '1' && vaNumber.status == '0') {
-        var response = {
-            "PayBillRs":
-            {
-                "STATUS": "00"
-            }
-        }
-
-        res.send(response)
-    }
-    // check if vaNumber found
-    if (vaNumber && vaNumber.status == '0') {
-        // update json file status to 1
-        vaNumber.status = '1'
-        fs.writeFileSync('./valist.json', JSON.stringify(valist))
-
-        var response = {
-            "PayBillRs":
-            {
-                "STATUS": "00"
-            }
-        }
-    
-        res.json(response);
-    } else if (vaNumber && vaNumber.status == '1') {
-        var response = {
-            "PayBillRs":
-            {
-                "STATUS": "88"
-            }
-        }
-
-        res.json(response)
-
-    } else {
-        var response = {
-            "PayBillRs":
-            {
-                "STATUS": "14"
-            }
-        }
-
-        res.json(response)
-    }
-})
-
-app.post('/revBill', (req, res) => {
+app.post('/payment', (req, res) => {
     var valist = JSON.parse(fs.readFileSync('./valist.json'))
+
     // find va number from valist json file and return the va number
-    let vaNumber = valist.find(va => va.va_number === req.body.RevBillRq.VI_VANUMBER)
+    let vaNumber = valist.find(va => va.va_number === req.body.vaNo)
+
+    if (!vaNumber) {
+        var response = {
+            "inquiryVAResponse": {
+                "responseCode": "14",
+                "responseMessage": "Record Specified was not found in the database"
+            }
+        }
+        res.json(response,422);
+
+    }
     // check if vaNumber found
-    if (vaNumber && vaNumber.status == '0') {
+    if  (vaNumber && vaNumber.scenario == '1' && vaNumber.amount == req.body.amount && vaNumber.status == '0') {
         // update json file status to 1
         vaNumber.status = '1'
         fs.writeFileSync('./valist.json', JSON.stringify(valist))
 
         var response = {
-            "RevBillRs":
-            {
-                "STATUS": "00"
+            "paymentVAResponse": {
+                "responseCode": "00",
+                "responseMessage": "Approve or completed successfully"
             }
         }
     
-        res.json(response);
-    } else if (vaNumber && vaNumber.status == '1') {
+        res.json(response,200);
+    } else if (vaNumber && vaNumber.scenario == '1' && vaNumber.amount !== req.body.amount && vaNumber.status == '0') {
         var response = {
-            "RevBillRs":
-            {
-                "STATUS": "88"
+            "paymentVAResponse": {
+                "responseCode": "13",
+                "responseMessage": "Invalid Amount"
             }
         }
 
-        res.json(response)
-        
+        res.json(response,422)
+
+    } else if (vaNumber && vaNumber.scenario == '1' && vaNumber.status == '1'){
+        var response = {
+            "paymentVAResponse": {
+                "responseCode": "88",
+                "responseMessage": "Bill already paid"
+            }
+        }
+
+        res.json(response,422)
+    } else if (vaNumber && vaNumber.scenario == '0' && vaNumber.status == '0') {
+        var response = {
+            "paymentVAResponse": {
+                "responseCode": "00",
+                "responseMessage": "Approve or completed successfully"
+            }
+        }
+        vaNumber.status = '1'
+        fs.writeFileSync('./valist.json', JSON.stringify(valist))
+
+        res.json(response,200)
+
     } else {
         var response = {
-            "RevBillRs":
-            {
-                "STATUS": "14"
+            "paymentVAResponse": {
+                "responseCode": "88",
+                "responseMessage": "Bill already paid"
             }
         }
 
-        res.json(response)
+        res.json(response,422)
+
     }
 })
+
 
 app.get('/refreshstatus', (req, res) => {
     var valist = JSON.parse(fs.readFileSync('./valist.json'))
+
     // update all status from 1 to 0
     valist.forEach(va => {
         va.status = '0'
-        va.scenario = '0'
     }
     )
     fs.writeFileSync('./valist.json', JSON.stringify(valist))
