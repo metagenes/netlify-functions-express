@@ -114,8 +114,6 @@ app.post('/payment', (req, res) => {
                 "responseMessage": "Approve or completed successfully"
             }
         }
-        vaNumber.status = '1'
-        fs.writeFileSync('./valist.json', JSON.stringify(valist))
 
         res.json(response,200)
 
